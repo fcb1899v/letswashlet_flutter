@@ -1,72 +1,79 @@
-import 'dart:io';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:vibration/vibration.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'common_function.dart';
 import 'extension.dart';
 import 'common_widget.dart';
 import 'admob_banner.dart';
 import 'constant.dart';
 
 class MyHomePage extends HookConsumerWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+  const MyHomePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
 
-    final washStrength = useState(1);
+    final washStrength = useState(3);
     final washVolume = useState(washStrength.value.washingVolume());
-    final musicVolume = useState(1);
+    final musicVolume = useState(2);
     final isNozzle = useState(false);
     final isWashing = useState(false);
     final isListening = useState(false);
     final isFlushing = useState(false);
-    final washPlayer = useMemoized(() => AudioPlayer());
-    final musicPlayer = useMemoized(() => AudioPlayer());
-    final flushPlayer = useMemoized(() => AudioPlayer());
+    final audioPlayers = AudioPlayerManager();
+    final lifecycle = useAppLifecycleState();
 
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (Platform.isIOS || Platform.isMacOS) initATTPlugin(context);
-        musicPlayer.setVolume(musicVolume.value.musicVolume());
-        flushPlayer.setVolume(flushVolume);
+        audioPlayers.audioPlayers[0].setVolume(washVolume.value);
+        audioPlayers.audioPlayers[1].setVolume(musicVolume.value.musicVolume());
+        audioPlayers.audioPlayers[2].setVolume(flushVolume);
       });
-      return () {
-        washPlayer.dispose();
-        musicPlayer.dispose();
-        flushPlayer.dispose();
-      };
+      return null;
     }, []);
 
     useEffect(() {
-      musicPlayer.setVolume(musicVolume.value.musicVolume());
+      washVolume.value = washStrength.value.washingVolume();
+      audioPlayers.audioPlayers[0].setVolume(washVolume.value);
+      audioPlayers.audioPlayers[1].setVolume(musicVolume.value.musicVolume());
       return null;
-    }, [musicVolume.value]);
+    }, [washStrength.value, musicVolume.value]);
 
     useEffect(() {
-      if (isWashing.value) {
-        washVolume.value = washStrength.value.washingVolume();
-        if (isWashing.value) {
-          washPlayer.setVolume(washVolume.value);
+      Future<void> handleLifecycleChange() async {
+        // ウィジェットが破棄されていたら何もしない
+        if (!context.mounted) return;
+        // アプリがバックグラウンドに移行する直前
+        if (lifecycle == AppLifecycleState.inactive || lifecycle == AppLifecycleState.paused) {
+          for (int i = 0; i < audioPlayers.audioPlayers.length; i++) {
+            final player = audioPlayers.audioPlayers[i];
+            try {
+              if (player.state == PlayerState.playing) await player.stop();
+            } catch (e) {
+              'Error handling stop for player $i: $e'.debugPrint();
+            }
+          }
         }
       }
+      handleLifecycleChange();
       return null;
-    }, [washStrength.value]);
+    }, [lifecycle, context.mounted, audioPlayers.audioPlayers.length]);
 
     ///Wash Action
     startWashing() async {
       if (!isWashing.value) {
         isNozzle.value= true;
         Vibration.vibrate(duration: vibTime, amplitude: vibAmp);
-        await washPlayer.setVolume(prefWashVolume);
-        prepWashAudio.playAudio(washPlayer);
-        washPlayer.onPlayerComplete.listen((event) {
+        await audioPlayers.audioPlayers[0].setVolume(prefWashVolume);
+        prepWashAudio.playAudio(audioPlayers.audioPlayers[0]);
+        audioPlayers.audioPlayers[0].onPlayerComplete.listen((event) {
           if (isNozzle.value) {
             isWashing.value = true;
-            washPlayer.stop();
-            washPlayer.setVolume(washVolume.value);
-            washAudio.loopAudio(washPlayer);
+            audioPlayers.audioPlayers[0].stop();
+            audioPlayers.audioPlayers[0].setVolume(washVolume.value);
+            washAudio.loopAudio(audioPlayers.audioPlayers[0]);
             "isWashing: ${isWashing.value}".debugPrint();
             "isNozzle: ${isNozzle.value}".debugPrint();
           }
@@ -79,10 +86,10 @@ class MyHomePage extends HookConsumerWidget {
         isNozzle.value = false;
         isWashing.value = false;
         Vibration.vibrate(duration: vibTime, amplitude: vibAmp);
-        await washPlayer.stop();
+        await audioPlayers.audioPlayers[0].stop();
         if (!isNozzle.value && !isWashing.value) {
-          await washPlayer.setVolume(prefWashVolume);
-          prepWashAudio.playAudio(washPlayer);
+          await audioPlayers.audioPlayers[0].setVolume(prefWashVolume);
+          prepWashAudio.playAudio(audioPlayers.audioPlayers[0]);
           "isWashing: ${isWashing.value}".debugPrint();
           "isNozzle: ${isNozzle.value}".debugPrint();
         }
@@ -91,28 +98,28 @@ class MyHomePage extends HookConsumerWidget {
 
     washPlusMinus(bool isPlus) {
       Vibration.vibrate(duration: vibTime, amplitude: vibAmp);
-      washStrength.value = isPlus.plusMinus(washStrength.value, 5, 1);
+      washStrength.value = washStrength.value.plusMinus(isPlus, 5, 1);
       "washStrength: ${washStrength.value}".debugPrint();
     }
 
     ///Music Action
     playMusic() async {
       Vibration.vibrate(duration: vibTime, amplitude: vibAmp);
-      musicAudio.loopAudio(musicPlayer);
+      musicAudio.loopAudio(audioPlayers.audioPlayers[1]);
       isListening.value = true;
       "isListening: ${isListening.value}".debugPrint();
     }
 
     stopMusic() async {
       Vibration.vibrate(duration: vibTime, amplitude: vibAmp);
-      await musicPlayer.stop();
+      await audioPlayers.audioPlayers[1].stop();
       isListening.value = false;
       "isListening: ${isListening.value}".debugPrint();
     }
 
     musicPlusMinus(bool isPlus) {
       Vibration.vibrate(duration: vibTime, amplitude: vibAmp);
-      musicVolume.value = isPlus.plusMinus(musicVolume.value, 3, 1);
+      musicVolume.value = musicVolume.value.plusMinus(isPlus, 3, 1);
       "musicVolume: ${musicVolume.value}".debugPrint();
     }
 
@@ -120,11 +127,11 @@ class MyHomePage extends HookConsumerWidget {
     startFlush() async {
       if (!isFlushing.value) {
         Vibration.vibrate(duration: vibTime, amplitude: vibAmp);
-        flushAudio.playAudio(flushPlayer);
+        flushAudio.playAudio(audioPlayers.audioPlayers[2]);
         isFlushing.value = true;
         "isFlushing: ${isFlushing.value}".debugPrint();
         await Future.delayed(const Duration(seconds: flushTime)).then((_) {
-          flushPlayer.stop();
+          audioPlayers.audioPlayers[2].stop();
           isFlushing.value = false;
           "isFlushing: ${isFlushing.value}".debugPrint();
         });
@@ -137,16 +144,17 @@ class MyHomePage extends HookConsumerWidget {
         child: myHomeAppBar(context),
       ),
       body: Container(color: Colors.white,
-        padding: EdgeInsets.only(top: context.height() * 0.01),
         child: Column(
           children: [
             const Spacer(flex: 3),
             /// Toilet Image
-            Stack(children: [
-              toiletImage(context),
-              nozzleImage(context, isNozzle.value),
-              waterImage(context, isWashing.value, washStrength.value),
-            ]),
+            Stack(alignment: Alignment.topCenter,
+              children: [
+                toiletImageWidget(context),
+                nozzleImageWidget(context, isNozzle.value),
+                waterImageWidget(context, isWashing.value, washStrength.value),
+              ],
+            ),
             const Spacer(flex: 1),
             /// Buttons
             Row(children: [

@@ -1,39 +1,21 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'extension.dart';
 import 'constant.dart';
-
-/// App Tracking Transparency
-Future<void> initATTPlugin(BuildContext context) async {
-  final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-  if (status == TrackingStatus.notDetermined && context.mounted) {
-    await showCupertinoDialog(context: context, builder: (context) => CupertinoAlertDialog(
-      title: Text(AppLocalizations.of(context)!.appTitle),
-      content: Text(AppLocalizations.of(context)!.thisApp),
-      actions: [
-        CupertinoDialogAction(
-          child: const Text('OK', style: TextStyle(color: Colors.blue)),
-          onPressed: () => Navigator.pop(context),
-        )
-      ],
-    ));
-    await Future.delayed(const Duration(milliseconds: 200));
-    await AppTrackingTransparency.requestTrackingAuthorization();
-  }
-}
 
 /// App Bar
 AppBar myHomeAppBar(BuildContext context) =>
     AppBar(
-      title: Text(title,
-        style: const TextStyle(
-          fontFamily: "cornerStone",
-          fontSize: appBarFontSize,
-          color: whiteColor,
+      title: Container(
+        margin: EdgeInsets.only(top: context.appBarTitleTopMargin()),
+        child: Text(title,
+          style: TextStyle(
+            fontFamily: "cornerStone",
+            fontSize: context.appBarFontSize(),
+            color: whiteColor,
+          ),
+          textAlign: TextAlign.center,
         ),
-        textScaler: TextScaler.linear(context.titleScaleFactor()),
       ),
       centerTitle: true,
       backgroundColor: blackColor,
@@ -41,10 +23,9 @@ AppBar myHomeAppBar(BuildContext context) =>
 
 
 /// Toilet Image
-Widget toiletImage(BuildContext context) =>
+Widget toiletImageWidget(BuildContext context) =>
     Container(
-      alignment: Alignment.center,
-      height: context.height() * toiletImageHeightRate,
+      height: context.toiletHeight(),
       decoration: const BoxDecoration(
         image: DecorationImage(
           image: AssetImage(toiletJpgImage),
@@ -53,24 +34,20 @@ Widget toiletImage(BuildContext context) =>
       ),
     );
 
-Widget nozzleImage(BuildContext context, bool isNozzle) =>
-    Container(
-      alignment: Alignment.topCenter,
-      padding: EdgeInsets.only(top: context.height() * nozzleTopPaddingRate),
-      child: AnimatedContainer(
-        width: context.height() * nozzleWidthRate,
-        height: context.height() * isNozzle.nozzleLength(),
-        duration: const Duration(seconds: nozzleMovingTime),
-        decoration: metalDecoration(),
-      )
+Widget nozzleImageWidget(BuildContext context, bool isNozzle) =>
+    AnimatedContainer(
+      margin: EdgeInsets.only(top: context.nozzleTopMargin()),
+      width: context.nozzleWidth(),
+      height: context.nozzleHeight(isNozzle),
+      duration: const Duration(seconds: nozzleMovingTime),
+      decoration: metalDecoration(),
     );
 
-Widget waterImage(BuildContext context, bool isWashing, int washStrength) =>
+Widget waterImageWidget(BuildContext context, bool isWashing, int washStrength) =>
     Container(
-      alignment: Alignment.center,
-      height: context.height() * waterImageHeightRate,
-      margin: EdgeInsets.only(top: context.height() * waterTopMarginRate),
-      child: Image(image: AssetImage(isWashing.waterImage(washStrength))),
+      margin: EdgeInsets.only(top: context.waterTopMargin(washStrength)),
+      width: context.waterWidth(),
+      child: isWashing ? Image(image: AssetImage(washStrength.waterImage())): null,
     );
 
 BoxDecoration metalDecoration() =>
@@ -140,14 +117,12 @@ Widget volumeButtonImage(BuildContext context, bool isPlus) =>
         ),
         borderRadius: BorderRadius.circular(context.buttonRadius()),
       ),
-      child: Text(isPlus ? "+": "–",
-        style: TextStyle(
+      child: Container(
+        alignment: Alignment.center,
+        child: Icon(isPlus ? CupertinoIcons.plus: CupertinoIcons.minus,
           color: blackColor,
-          fontSize: context.volumeFontSize(),
-          fontFamily: "roboto"
+          size: context.volumeIconSize(),
         ),
-        textAlign: TextAlign.center,
-        textScaler: TextScaler.linear(context.volumeScaleFactor()),
       ),
     );
 
