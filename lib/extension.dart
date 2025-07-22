@@ -1,37 +1,41 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
+import 'constant.dart';
+
+/// BuildContext extensions for responsive design and UI sizing
+/// Provides methods to calculate dimensions based on screen size
 extension ContextExt on BuildContext {
 
-  ///Common
+  /// ===== COMMON DIMENSIONS =====
   double width() => MediaQuery.of(this).size.width;
   double height() => MediaQuery.of(this).size.height;
+  double responsibleWidth() => (width() > 600) ? 600: width();
 
-  ///AppBar Size
-  double appBarHeight() => (width() < 660) ? (width() - 60) / 10 + 20: 80;
-  double appBarFontSize() => (width() < 660) ? (width() - 60) / 10: 60;
-  double appBarTitleTopMargin() => (width() < 660) ? (width() - 60) / 25: 24;
+  /// ===== APP BAR DIMENSIONS =====
+  double appBarHeight() => responsibleWidth() * 0.15;
+  double appBarFontSize() => responsibleWidth() * 0.10;  
+  double appBarTitleTopMargin() => responsibleWidth() * 0.04;
 
-  ///Button Size
-  double washButtonSize() => (width() < 660) ? (width() - 60) / 3 - 20: 180.0;
-  double musicButtonSize() => (width() < 660) ? (width() - 60) / 6: 100.0;
-  double volumeButtonSize() => (width() < 660) ? (width() - 60) / 10: 60.0;
-  double volumeIconSize() => (width() < 660) ? (width() - 60) / 15: 40.0;
-  double flushButtonWidth() => (width() < 660) ? (width() - 60) / 3: 200.0;
-  double flushButtonHeight() => (width() < 660) ? (width() - 60) / 8: 90.0;
-  double thickBorderWidth() => (width() < 660) ? (width() - 60) / 60: 10.0;
-  double thinBorderWidth() => (width() < 660) ? (width() - 60) / 100: 6.0;
-  double buttonRadius() => (width() < 660) ? (width() - 60) / 40: 15.0;
-  double buttonSpace() => (width() < 660) ? (width() - 60) / 25: 24.0;
+  /// ===== BUTTON DIMENSIONS =====
+  double washButtonSize() => responsibleWidth() * 0.24;  
+  double musicButtonSize() => responsibleWidth() * 0.16;
+  double volumeButtonSize() => responsibleWidth() * 0.10;
+  double volumeIconSize() => responsibleWidth() * 0.08;
+  double flushButtonWidth() => responsibleWidth() * 0.32;
+  double flushButtonHeight() => responsibleWidth() * 0.10;
+  double thickBorderWidth() =>  responsibleWidth() * 0.016;
+  double thinBorderWidth() => responsibleWidth() * 0.01;
+  double buttonRadius() => responsibleWidth() * 0.025;
+  double buttonSpace() => responsibleWidth() * 0.04;
 
-  ///Lamp Size
-  double lampSize() => (width() < 660) ? (width() - 60) / 25: 24.0;
-  double lampPadding() => (width() < 660) ? (width() - 60) / 150: 4.0;
-  double lampSpace() => (width() < 660) ? (width() - 60) / 240: 2.5;
-  double lampSideSpace() => (width() < 660) ? (width() - 60) / 48: 12.5;
+  /// ===== LAMP INDICATOR DIMENSIONS =====
+  double lampSize() => responsibleWidth() * 0.04;
+  double lampPadding() => responsibleWidth() * 0.005;
+  double lampSpace() => responsibleWidth() * 0.005;
+  double lampSideSpace() => responsibleWidth() * 0.01;
 
-  ///Toilet
+  /// ===== TOILET IMAGE DIMENSIONS =====
   double toiletHeight() => height() * 0.5;
   double nozzleTopMargin() => height() * 0.28;
   double nozzleWidth() => height() * 0.01;
@@ -39,46 +43,41 @@ extension ContextExt on BuildContext {
   double waterTopMargin(int washStrength) => height() * (0.31 - 0.05 * washStrength);
   double waterWidth() => height() * 0.025;
 
-  ///Admob
+  /// ===== AD BANNER DIMENSIONS =====
   double admobHeight() => (height() < 600) ? 50: (height() < 1000) ? 50 + (height() - 600) / 8: 100;
   double admobWidth() => width();
 }
 
+/// String extension for debug printing
+/// Only prints in debug mode to avoid console spam in release builds
 extension StringExt on String {
 
+  /// Print string only in debug mode
   void debugPrint() {
     if (kDebugMode) {
       print(this);
     }
   }
-
-  ///Audio Player
-  void playAudio(AudioPlayer audioPlayer) async {
-    debugPrint();
-    await audioPlayer.setReleaseMode(ReleaseMode.stop);
-    await audioPlayer.stop();
-    await audioPlayer.setReleaseMode(ReleaseMode.release);
-    await audioPlayer.play(AssetSource(this));
-  }
-
-  void loopAudio(AudioPlayer audioPlayer) async {
-    debugPrint();
-    await audioPlayer.setReleaseMode(ReleaseMode.stop);
-    await audioPlayer.stop();
-    await audioPlayer.setReleaseMode(ReleaseMode.loop);
-    await audioPlayer.play(AssetSource(this));
-  }
-
 }
 
+/// Integer extensions for volume calculations and UI logic
+/// Provides utility methods for washing strength, music volume, and UI state
 extension IntExt on int {
 
+  /// Convert washing strength (1-5) to audio volume multiplier
+  /// Returns volume level suitable for washing sounds
   double washingVolume() => 1.5 * this;
+  /// Convert music volume (1-3) to audio volume multiplier
+  /// Returns volume level suitable for background music
   double musicVolume() => 4 * this - 3;
-  Color lampColor(int volume, Color? color) =>
-      (this == volume) ? color! : Colors.black;
+  /// Determine lamp color based on current volume/strength
+  /// Green for active level, black for inactive
+  Color lampColor(int volume) => (this == volume) ? deepGreen! : Colors.black;
+  /// Get water animation image path based on strength level
+  /// Returns path like "assets/images/water1.png" through "assets/images/water5.png"
   String waterImage() => "assets/images/water$this.png";
-
+  /// Increment/decrement value within specified bounds
+  /// Used for volume and strength controls with min/max limits
   int plusMinus(bool isPlus, int max, int min) =>
       (isPlus && this < max) ? this + 1:
       (!isPlus && this > min) ? this - 1: this;
