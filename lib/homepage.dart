@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:vibration/vibration.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'audio_manager.dart';
 import 'extension.dart';
 import 'admob_banner.dart';
@@ -26,6 +27,14 @@ class HomePage extends HookConsumerWidget {
     // Initialize audio manager and home widget
     final audioManager = useMemoized(() => AudioManager());
     final home = HomeWidget(context);
+
+    // Initialized app
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) async =>
+        FlutterNativeSplash.remove()
+      );
+      return null;
+    }, []);
 
     // Update audio volumes when strength/volume values change
     useEffect(() {

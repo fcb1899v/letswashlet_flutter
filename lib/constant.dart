@@ -8,8 +8,12 @@ const String title = "LETS TOILET";
 /// ===== FIREBASE APP CHECK CONFIGURATION =====
 /// App Check providers for Android and iOS
 /// Uses debug providers in debug mode, production providers in release mode
-const androidProvider = kDebugMode ? AndroidProvider.debug: AndroidProvider.playIntegrity;
-const appleProvider = kDebugMode ? AppleProvider.debug: AppleProvider.deviceCheck;
+final androidProvider = kDebugMode
+    ? const AndroidDebugProvider()
+    : const AndroidPlayIntegrityProvider();
+final appleProvider = kDebugMode
+    ? const AppleDebugProvider()
+    : const AppleDeviceCheckProvider();
 
 /// ===== IMAGE ASSETS =====
 /// Image file paths for UI elements
