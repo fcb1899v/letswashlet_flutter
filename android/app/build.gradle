@@ -78,10 +78,26 @@ flutter {
     source '../..'
 }
 
+// Exclude deprecated play-services-safetynet; use Play Integrity API instead
+configurations.all {
+    exclude group: 'com.google.android.gms', module: 'play-services-safetynet'
+}
+
+def flutterSdkPath = localProperties.getProperty("flutter.sdk")
+def flutterJar = flutterSdkPath != null ? file("${flutterSdkPath}/bin/cache/artifacts/engine/android-arm64-release/flutter.jar") : null
+
 dependencies {
+    // IDE の参照解決用（FlutterActivity 等）。実行時は Flutter プラグインが提供するため compileOnly
+    if (flutterJar != null && flutterJar.exists()) {
+        compileOnly files(flutterJar)
+    }
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation platform('com.google.firebase:firebase-bom:34.9.0')
+    implementation "androidx.core:core-ktx:1.17.0"
+    implementation platform('com.google.firebase:firebase-bom:34.10.0')
     implementation 'com.google.firebase:firebase-analytics'
-    implementation 'com.google.firebase:firebase-appcheck-playintegrity'
+    implementation("com.google.firebase:firebase-appcheck:19.0.2") {
+        exclude group: "com.google.firebase", module: "firebase-appcheck-safetynet"
+    }
+    implementation "com.google.firebase:firebase-appcheck-playintegrity:19.0.2"
     implementation 'com.google.android.play:integrity:1.6.0'
 }
