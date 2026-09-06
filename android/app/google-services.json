@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "260356188305",
+    "project_id": "washlet-simulator-app",
+    "storage_bucket": "washlet-simulator-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:260356188305:android:a9957d6d013b16c50a3730",
+        "android_client_info": {
+          "package_name": "nakajimamasao.appstudio.letswashlet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "260356188305-5rbtqb8cfkevvu10uh0utcfvp9gnleqm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "nakajimamasao.appstudio.letswashlet",
+            "certificate_hash": "42142267a3e4522471ce3dc04fabd833b1a0a54e"
+          }
+        },
+        {
+          "client_id": "260356188305-61u1urv0llceklm7t77kn7q3pj8pdcpf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAeBnShf1_t6p--6ZwdGg9wacDuAwp9V1I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "260356188305-61u1urv0llceklm7t77kn7q3pj8pdcpf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "260356188305-t0jd93822hpa95njp5o31v5q809vckc6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "nakajimamasao.appstudio.letswashlet"
+              }
+            }
+          ]
+        }
+      },
+      "admob_app_id": "ca-app-pub-1585283309075901~9977015100"
+    }
+  ],
+  "configuration_version": "1"
+}

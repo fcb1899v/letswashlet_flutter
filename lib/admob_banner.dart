@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'extension.dart';
+import 'constant.dart';
 
 /// Ad Banner Widget
 /// Manages Google Mobile Ads banner display with consent handling
@@ -18,6 +19,9 @@ class AdBannerWidget extends HookWidget {
     final adLoaded = useState(false);
     final adFailedLoading = useState(false);
     final bannerAd = useState<BannerAd?>(null);
+    // Ref, not state: the consent callbacks resolve after this widget can be
+    // gone, and writing to a disposed ValueNotifier asserts in debug
+    final isAdRequested = useRef(false);
     // final testIdentifiers = ['2793ca2a-5956-45a2-96c0-16fafddc1a15'];
 
     /// Get appropriate banner ad unit ID based on platform and build mode
@@ -26,21 +30,33 @@ class AdBannerWidget extends HookWidget {
         (!kDebugMode && Platform.isIOS) ? dotenv.get("IOS_BANNER_UNIT_ID") :
         (!kDebugMode && Platform.isAndroid) ? dotenv.get(
             "ANDROID_BANNER_UNIT_ID") :
-        (Platform.isIOS) ? dotenv.get("IOS_BANNER_TEST_ID") :
-        dotenv.get("ANDROID_BANNER_TEST_ID");
+        (Platform.isIOS) ? iosBannerTestId :
+        androidBannerTestId;
 
     /// Load banner ad with error handling and retry logic
     /// Creates BannerAd instance with appropriate size and listener
     Future<void> loadAdBanner() async {
+      // largeBanner asked for a fixed 320x100 inside a box sized by admobWidth
+      // and admobHeight. Inline adaptive asks for that box's width and height
+      final cap = context.admobHeight().toInt();
+      final size = AdSize.getInlineAdaptiveBannerAdSize(
+          context.admobWidth().toInt(), cap);
       final adBanner = BannerAd(
         adUnitId: bannerUnitId(),
-        size: AdSize.largeBanner,
+        size: size,
         request: const AdRequest(),
         listener: BannerAdListener(
           /// Called when ad successfully loads
-          onAdLoaded: (Ad ad) {
+          onAdLoaded: (Ad ad) async {
             'Ad: $ad loaded.'.debugPrint();
+            // Mount first; the await below only feeds a debug line
             adLoaded.value = true;
+            if (kDebugMode) {
+              // Requested and served together: neither alone separates the size
+              // asked for from the creative Google had to hand
+              final served = await (ad as BannerAd).getPlatformAdSize();
+              'AdSize: ${size.width} x cap $cap / served: ${served?.width} x ${served?.height}'.debugPrint();
+            }
           },
           /// Called when ad fails to load
           /// Disposes failed ad and retries after 30 seconds
@@ -58,6 +74,22 @@ class AdBannerWidget extends HookWidget {
       bannerAd.value = adBanner;
     }
 
+    /// The single gate for the ad request. canRequestAds is the SDK's own
+    /// verdict: it already weighs the region, the TCF consent string and
+    /// Additional Consent, so the app must not read ConsentStatus and decide
+    /// for itself. A false answer also covers "the SDK could not tell", and
+    /// letting that through is what serving without consent looks like in the EEA
+    Future<void> requestAdIfAllowed() async {
+      if (isAdRequested.value) return;
+      if (!await ConsentInformation.instance.canRequestAds()) return;
+      // Both callers below race across that await. Claiming the request happens
+      // with no await in between, so whoever resumes second always sees the
+      // flag and no second BannerAd is created for the same slot
+      if (isAdRequested.value) return;
+      isAdRequested.value = true;
+      await loadAdBanner();
+    }
+
     /// Initialize ad loading with consent management
     /// Handles GDPR consent requirements before loading ads
     useEffect(() {
@@ -67,25 +99,24 @@ class AdBannerWidget extends HookWidget {
         //   testIdentifiers: testIdentifiers,
         // ),
       ), () async {
-        /// Check if consent form is available
-        if (await ConsentInformation.instance.isConsentFormAvailable()) {
-          ConsentForm.loadConsentForm((ConsentForm consentForm) async {
-            var status = await ConsentInformation.instance.getConsentStatus();
-            "status: $status".debugPrint();
-            
-            /// Show consent form if required, otherwise load ad directly
-            if (status == ConsentStatus.required) {
-              consentForm.show((formError) async => await loadAdBanner());
-            } else {
-              await loadAdBanner();
-            }
-          }, (formError) {});
-        } else {
-          /// Load ad directly if no consent form is available
-          await loadAdBanner();
-        }
-      }, (FormError error) {});
-      
+        // The SDK decides whether a form is required, loads it and presents it.
+        // The old flow called loadAdBanner from the consent form callback, which
+        // fires when the form closes no matter what the user chose, so a user
+        // who declined still got an ad request
+        await ConsentForm.loadAndShowConsentFormIfRequired((formError) async {
+          if (formError != null) {
+            "formError: ${formError.errorCode}: ${formError.message}".debugPrint();
+          }
+          await requestAdIfAllowed();
+        });
+      }, (FormError error) async {
+        // The update failed, but consent given in an earlier session still
+        // stands and canRequestAds can still say yes. Stopping here would throw
+        // away impressions the SDK would have allowed
+        "error: ${error.errorCode}: ${error.message}".debugPrint();
+        await requestAdIfAllowed();
+      });
+
       "bannerAd: ${bannerAd.value}".debugPrint();
       
       /// Cleanup: dispose ad when widget unmounts

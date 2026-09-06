@@ -1,19 +1,9 @@
-import 'package:firebase_app_check/firebase_app_check.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Application title displayed in the app bar
 const String title = "LETS TOILET";
 
 /// ===== FIREBASE APP CHECK CONFIGURATION =====
-/// App Check providers for Android and iOS
-/// Uses debug providers in debug mode, production providers in release mode
-final androidProvider = kDebugMode
-    ? const AndroidDebugProvider()
-    : const AndroidPlayIntegrityProvider();
-final appleProvider = kDebugMode
-    ? const AppleDebugProvider()
-    : const AppleDeviceCheckProvider();
 
 /// ===== IMAGE ASSETS =====
 /// Image file paths for UI elements
@@ -67,4 +57,22 @@ final Color? deepBlue = Colors.blue[500];                    // Primary accent c
 final Color? deepGreen = Colors.greenAccent[400];            // Success/active state
 final Color? lightGreen = Colors.green[300];                 // Light success state
 
-
+// --- AdMob demo ad units ---
+//
+// Google publishes these and they are the same for every developer, so they are
+// constants here rather than .env entries: they are not secret, and keeping them
+// in source means a missing .env key can no longer break a debug build.
+// Production unit IDs stay in .env, because those are ours.
+// https://developers.google.com/admob/android/test-ads
+// https://developers.google.com/admob/ios/test-ads  (checked 2026-09-02)
+// The banner in this app is adaptive, and Google lists a separate demo unit for
+// adaptive banners, shared by the anchored and inline variants. The fixed size
+// units (Android 6300978111, iOS 2934735716) only ever serve the 320x50
+// creative, so every adaptive height measured against them came back at the
+// 320x50 ratio no matter what size was requested
+const String androidBannerTestId = "ca-app-pub-3940256099942544/9214589741";
+const String iosBannerTestId = "ca-app-pub-3940256099942544/2435281174";
+const String androidRewardedTestId = "ca-app-pub-3940256099942544/5224354917";
+const String iosRewardedTestId = "ca-app-pub-3940256099942544/1712485313";
+const String androidInterstitialTestId = "ca-app-pub-3940256099942544/1033173712";
+const String iosInterstitialTestId = "ca-app-pub-3940256099942544/4411468910";

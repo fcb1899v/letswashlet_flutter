@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -11,12 +9,15 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'l10n/app_localizations.dart' show AppLocalizations;
 import 'firebase_options.dart';
-import 'constant.dart';
 import 'homepage.dart';
 import 'dart:async';
 
 /// Main entry point of the application
 /// Initializes all required services and configurations
+// No ATT call here. On iOS the UMP form shows Google's IDFA explainer and then
+// raises the system ATT prompt itself, so asking again from the app put a second
+// explainer in front of a user who had already answered. Removed in NEO first;
+// see 03_Developer/technical/2026-08-25_elevatorneo_att_gate_removal.md
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -48,15 +49,9 @@ Future<void> main() async {
   // Run the app with Riverpod provider scope
   runApp(const ProviderScope(child: MyApp()));
   /// --- Post-Launch Services ---
-  // Activate Firebase App Check for security
-  await FirebaseAppCheck.instance.activate(
-    providerAndroid: androidProvider,
-    providerApple: appleProvider,
-  );
   // Initialize Google Mobile Ads
   await MobileAds.instance.initialize();
   // Initialize App Tracking Transparency
-  await initATTPlugin();
 }
 
 /// Main application widget
@@ -85,18 +80,5 @@ class MyApp extends StatelessWidget {
         RouteObserver<ModalRoute>()
       ],
     );
-  }
-}
-
-/// Initialize App Tracking Transparency (ATT) plugin
-/// Requests tracking authorization on iOS/macOS platforms
-Future<void> initATTPlugin() async {
-  if (Platform.isIOS || Platform.isMacOS) {
-    // Check current tracking authorization status
-    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-    // Request authorization if not determined
-    if (status == TrackingStatus.notDetermined) {
-      await AppTrackingTransparency.requestTrackingAuthorization();
-    }
   }
 }
