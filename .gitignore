@@ -126,6 +126,11 @@ ios/Runner/GoogleService-Info.plist
 # two days later. Run `flutterfire configure` after a fresh clone to regenerate it.
 lib/firebase_options.dart
 
+# Anything regenerable stays out (2026-09-19). `flutterfire configure` and the
+# Firebase console write these back, so tracking them only publishes the
+# project identifiers into a repository that is scanned automatically.
+firebase.json
+
 # AdMob and Firebase IDs
 # Not games-ids.xml: the other four apps that use Play Games track theirs.
 # Excluding it here is why this app lost the file. The Play Games app id
