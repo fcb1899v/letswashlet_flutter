@@ -12,12 +12,8 @@ import 'firebase_options.dart';
 import 'homepage.dart';
 import 'dart:async';
 
-/// Main entry point of the application
-/// Initializes all required services and configurations
-// No ATT call here. On iOS the UMP form shows Google's IDFA explainer and then
-// raises the system ATT prompt itself, so asking again from the app put a second
-// explainer in front of a user who had already answered. Removed in NEO first;
-// see 03_Developer/technical/2026-08-25_elevatorneo_att_gate_removal.md
+/// Main entry point: initializes all required services and configurations.
+// No ATT call here: on iOS the UMP form raises the system ATT prompt itself.
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();

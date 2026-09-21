@@ -2,14 +2,12 @@ import 'package:just_audio/just_audio.dart';
 import 'package:letswashlet/extension.dart';
 import 'constant.dart';
 
-/// Audio Manager Class
-/// Handles audio playback for toilet simulation including washing, music, and flush sounds
-/// Manages multiple audio players with different states and volume controls
+/// Audio manager for the toilet simulation: washing, music and flush sounds
+/// across multiple players with their own state and volume
 class AudioManager {
 
   /// ===== AUDIO PLAYER INITIALIZATION =====
-  /// Audio player instances for different sound types
-  /// Index 0: Washing sounds, Index 1: Music, Index 2: Flush sounds
+  /// Players by index: 0 washing sounds, 1 music, 2 flush sounds
   final List<AudioPlayer> audioPlayers;
   static const audioPlayerNumber = 3;
   
@@ -25,8 +23,7 @@ class AudioManager {
   String playerTitle(int index) => "${["wash", "music", "flush"][index]}Player";
 
   /// ===== CORE AUDIO PLAYBACK METHODS =====
-  /// Play loop sound with specified volume and asset
-  /// Used for continuous sounds like washing and music
+  /// Play loop sound with given volume and asset; used for washing and music
   Future<void> playLoopSound({
     required int index,
     required String asset,
@@ -116,7 +113,6 @@ class AudioManager {
 
   /// ===== RESOURCE CLEANUP METHODS =====
   /// Dispose all audio players and release resources
-  /// Ensures proper cleanup to prevent memory leaks
   Future<void> dispose() async {
     "Disposing AudioManager".debugPrint();
     try {

@@ -192,17 +192,15 @@ class HomePage extends HookConsumerWidget {
   }
 }
 
-/// HomeWidget class
-/// Contains all UI widget components for the toilet interface
-/// Manages app bar, toilet images, buttons, and volume indicators
+/// HomeWidget: all UI components for the toilet interface
+/// (app bar, toilet images, buttons and volume indicators)
 class HomeWidget {
   final BuildContext context;
 
   HomeWidget(this.context);
 
   /// ===== APP BAR WIDGET =====
-  /// Creates the main app bar with centered title
-  /// Uses custom font and styling for the app title
+  /// Main app bar with centered title in the custom font
   PreferredSize homeAppBar() => PreferredSize(
     preferredSize: Size.fromHeight(context.appBarHeight()),
     child: AppBar(
@@ -223,8 +221,7 @@ class HomeWidget {
   );
 
   /// ===== TOILET IMAGE WIDGETS =====
-  /// Main toilet image container
-  /// Displays the base toilet image with proper sizing
+  /// Main toilet image container with proper sizing
   Widget toiletImageWidget() => Container(
     height: context.toiletHeight(),
     decoration: const BoxDecoration(
@@ -235,9 +232,7 @@ class HomeWidget {
     ),
   );
 
-  /// Animated nozzle image widget
-  /// Shows nozzle in different positions based on washing state
-  /// Uses animated container for smooth transitions
+  /// Animated nozzle image; position follows the washing state
   Widget nozzleImageWidget(bool isNozzle) => AnimatedContainer(
     margin: EdgeInsets.only(top: context.nozzleTopMargin()),
     width: context.nozzleWidth(),
@@ -246,9 +241,7 @@ class HomeWidget {
     decoration: metalDecoration(),
   );
 
-  /// Water animation widget
-  /// Displays water animation based on washing state and strength
-  /// Position and image change based on wash strength level
+  /// Water animation widget; position and image follow the wash strength level
   Widget waterImageWidget(bool isWashing, int washStrength) => Container(
     margin: EdgeInsets.only(top: context.waterTopMargin(washStrength)),
     width: context.waterWidth(),
@@ -273,9 +266,7 @@ class HomeWidget {
   );
 
   /// ===== CONTROL BUTTON WIDGETS =====
-  /// Wash button widget (start/stop)
-  /// Circular button with different colors for start/stop states
-  /// Uses custom images and border styling
+  /// Wash button widget (start/stop): circular, colored by state
   Widget washButton({
     required bool isStart,
     required void Function() onTap,
@@ -298,9 +289,7 @@ class HomeWidget {
     ),
   );
 
-  /// Music button widget (play/stop)
-  /// Circular button with music icon and play/stop states
-  /// Uses green border for active state
+  /// Music button widget (play/stop), green border when active
   Widget musicButton({
     required bool isPlay,
     required void Function() onTap,
@@ -324,9 +313,7 @@ class HomeWidget {
     ),
   );
 
-  /// Volume control button widget (plus/minus)
-  /// Rectangular button with plus/minus icons
-  /// Used for adjusting washing strength and music volume
+  /// Volume control button (plus/minus) for washing strength and music volume
   Widget volumeButton({
     required bool isPlus,
     required void Function() onTap,
@@ -354,9 +341,7 @@ class HomeWidget {
       )
   );
 
-  /// Flush button widget
-  /// Rectangular button with flush icon
-  /// Larger size compared to other control buttons
+  /// Flush button widget: rectangular, larger than the other control buttons
   Widget flushButton({
     required void Function() onTap
   }) => GestureDetector(
@@ -379,9 +364,7 @@ class HomeWidget {
   );
 
   /// ===== VOLUME INDICATOR WIDGET =====
-  /// Volume lamps indicator widget
-  /// Shows current volume/strength level with illuminated circles
-  /// Uses List.generate to create multiple lamp indicators
+  /// Volume lamps: shows the current level with illuminated circles
   Widget volumeLamps(int number, int volume) => Row(children: [
     SizedBox(width: context.lampSideSpace()),
     ...List.generate(number, (index) => Container(

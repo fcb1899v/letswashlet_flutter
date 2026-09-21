@@ -57,19 +57,11 @@ final Color? deepBlue = Colors.blue[500];                    // Primary accent c
 final Color? deepGreen = Colors.greenAccent[400];            // Success/active state
 final Color? lightGreen = Colors.green[300];                 // Light success state
 
-// --- AdMob demo ad units ---
-//
-// Google publishes these and they are the same for every developer, so they are
-// constants here rather than .env entries: they are not secret, and keeping them
-// in source means a missing .env key can no longer break a debug build.
-// Production unit IDs stay in .env, because those are ours.
-// https://developers.google.com/admob/android/test-ads
-// https://developers.google.com/admob/ios/test-ads  (checked 2026-09-02)
-// The banner in this app is adaptive, and Google lists a separate demo unit for
-// adaptive banners, shared by the anchored and inline variants. The fixed size
-// units (Android 6300978111, iOS 2934735716) only ever serve the 320x50
-// creative, so every adaptive height measured against them came back at the
-// 320x50 ratio no matter what size was requested
+/// AdMob demo ad units. Google publishes these and they are the same for every developer,
+/// so they are constants here rather than .env entries; production unit IDs stay in .env.
+/// Adaptive banners need their own demo unit; the fixed size one only serves 320x50.
+/// https://developers.google.com/admob/android/test-ads
+/// https://developers.google.com/admob/ios/test-ads (checked 2026-09-02)
 const String androidBannerTestId = "ca-app-pub-3940256099942544/9214589741";
 const String iosBannerTestId = "ca-app-pub-3940256099942544/2435281174";
 const String androidRewardedTestId = "ca-app-pub-3940256099942544/5224354917";

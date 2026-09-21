@@ -7,9 +7,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'extension.dart';
 import 'constant.dart';
 
-/// Ad Banner Widget
-/// Manages Google Mobile Ads banner display with consent handling
-/// Handles different ad unit IDs for debug/release and iOS/Android platforms
+/// Ad banner widget: loads a Google Mobile Ads banner with consent handling
+/// and picks the unit id per debug/release and iOS/Android.
 class AdBannerWidget extends HookWidget {
   const AdBannerWidget({super.key});
 
@@ -74,17 +73,13 @@ class AdBannerWidget extends HookWidget {
       bannerAd.value = adBanner;
     }
 
-    /// The single gate for the ad request. canRequestAds is the SDK's own
-    /// verdict: it already weighs the region, the TCF consent string and
-    /// Additional Consent, so the app must not read ConsentStatus and decide
-    /// for itself. A false answer also covers "the SDK could not tell", and
-    /// letting that through is what serving without consent looks like in the EEA
+    /// The single gate for the ad request. canRequestAds is the SDK's own verdict
+    /// (region, TCF, Additional Consent); never decide from ConsentStatus in the app.
     Future<void> requestAdIfAllowed() async {
       if (isAdRequested.value) return;
       if (!await ConsentInformation.instance.canRequestAds()) return;
-      // Both callers below race across that await. Claiming the request happens
-      // with no await in between, so whoever resumes second always sees the
-      // flag and no second BannerAd is created for the same slot
+      // Both callers race across that await. Claiming the request with no await
+      // in between means no second BannerAd is created for the same slot
       if (isAdRequested.value) return;
       isAdRequested.value = true;
       await loadAdBanner();
@@ -100,9 +95,7 @@ class AdBannerWidget extends HookWidget {
         // ),
       ), () async {
         // The SDK decides whether a form is required, loads it and presents it.
-        // The old flow called loadAdBanner from the consent form callback, which
-        // fires when the form closes no matter what the user chose, so a user
-        // who declined still got an ad request
+        // Do not request from the form callback: it fires even when the user declined
         await ConsentForm.loadAndShowConsentFormIfRequired((formError) async {
           if (formError != null) {
             "formError: ${formError.errorCode}: ${formError.message}".debugPrint();
@@ -110,9 +103,8 @@ class AdBannerWidget extends HookWidget {
           await requestAdIfAllowed();
         });
       }, (FormError error) async {
-        // The update failed, but consent given in an earlier session still
-        // stands and canRequestAds can still say yes. Stopping here would throw
-        // away impressions the SDK would have allowed
+        // The update failed, but earlier consent still stands and canRequestAds
+        // can still say yes, so do not stop here
         "error: ${error.errorCode}: ${error.message}".debugPrint();
         await requestAdIfAllowed();
       });
