@@ -18,8 +18,8 @@ class AdBannerWidget extends HookWidget {
     final adLoaded = useState(false);
     final adFailedLoading = useState(false);
     final bannerAd = useState<BannerAd?>(null);
-    // Ref, not state: the consent callbacks resolve after this widget can be
-    // gone, and writing to a disposed ValueNotifier asserts in debug
+    // Ref, not state: the consent callbacks resolve after this widget can be gone.
+    // Writing to a disposed ValueNotifier asserts in debug.
     final isAdRequested = useRef(false);
     // final testIdentifiers = ['2793ca2a-5956-45a2-96c0-16fafddc1a15'];
 
@@ -35,8 +35,8 @@ class AdBannerWidget extends HookWidget {
     /// Load banner ad with error handling and retry logic
     /// Creates BannerAd instance with appropriate size and listener
     Future<void> loadAdBanner() async {
-      // largeBanner asked for a fixed 320x100 inside a box sized by admobWidth
-      // and admobHeight. Inline adaptive asks for that box's width and height
+      // largeBanner asked for a fixed 320x100 in a box sized by admobWidth and admobHeight.
+      // Inline adaptive asks for that box's width and height.
       final cap = context.admobHeight().toInt();
       final size = AdSize.getInlineAdaptiveBannerAdSize(
           context.admobWidth().toInt(), cap);
@@ -51,8 +51,8 @@ class AdBannerWidget extends HookWidget {
             // Mount first; the await below only feeds a debug line
             adLoaded.value = true;
             if (kDebugMode) {
-              // Requested and served together: neither alone separates the size
-              // asked for from the creative Google had to hand
+              // Log requested and served sizes together.
+              // Neither alone separates the size asked for from the creative Google served.
               final served = await (ad as BannerAd).getPlatformAdSize();
               'AdSize: ${size.width} x cap $cap / served: ${served?.width} x ${served?.height}'.debugPrint();
             }
@@ -78,8 +78,8 @@ class AdBannerWidget extends HookWidget {
     Future<void> requestAdIfAllowed() async {
       if (isAdRequested.value) return;
       if (!await ConsentInformation.instance.canRequestAds()) return;
-      // Both callers race across that await. Claiming the request with no await
-      // in between means no second BannerAd is created for the same slot
+      // Both callers race across that await.
+      // Claiming with no await in between means no second BannerAd is created for the slot.
       if (isAdRequested.value) return;
       isAdRequested.value = true;
       await loadAdBanner();
@@ -103,8 +103,8 @@ class AdBannerWidget extends HookWidget {
           await requestAdIfAllowed();
         });
       }, (FormError error) async {
-        // The update failed, but earlier consent still stands and canRequestAds
-        // can still say yes, so do not stop here
+        // The update failed, but earlier consent still stands and canRequestAds may say yes.
+        // So do not stop here.
         "error: ${error.errorCode}: ${error.message}".debugPrint();
         await requestAdIfAllowed();
       });
